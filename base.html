@@ -26,7 +26,13 @@
     // カメラを作成
     var camera = new THREE.PerspectiveCamera(45, width / height, 1, 1000);
 
+//箱
 
+var geometry = new THREE.BoxGeometry(1, 1, 1);
+var material = new THREE.MEshPhongMaterial({ color: 0x0000ff});
+var box = new THREE.Mesh(geometry, material);
+box.position.z = -5;
+scene.add(box);
 
 //球
 var sphereGeometry = new THREE.SphereGeometry( 0.5, 32, 32 ); 
@@ -57,7 +63,8 @@ scene.add( sphere2 );
       sphere1.rotation.y += 0.01;
       sphere2.rotation.y += 0.01;
 	    
-      sphere1.
+      box.rotation.x += 0.01;
+      box.rotation.y += 0.01;
 	    
   
       renderer.render(scene, camera);
