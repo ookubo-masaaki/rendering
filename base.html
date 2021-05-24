@@ -68,9 +68,11 @@ scene.add( sphere2 );
 	    
       if(box.rotation.z > 0){
 	      box.rotation.z += 0.1;
-      }else if(box.rotation.z < 5){
-	      box.rotation.z -= 0.01;
       }
+	    
+	    if(box.rotation.z < 5){
+		    box.rotation.z -= 0.05;
+	    }
 	    
   
       renderer.render(scene, camera);
