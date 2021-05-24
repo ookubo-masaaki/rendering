@@ -20,13 +20,25 @@
             const camera = new THREE.PerspectiveCamera(45, width / height);
             camera.position.set(0, 0, +1000);
             // 箱を作成
-            const geometry = new THREE.BoxGeometry(200, 200, 200);
+
+			for(let i = 0; i < 5; i++){
+				const geometry = new THREE.BoxGeometry(100, 100, 100);
+            	// マテリアルにテクスチャーを設定
+            	const material = new THREE.MeshNormalMaterial();
+            	// const material = new THREE.MeshBasicMaterial({ color: '#124dae' });  //素材を変えることができる
+            	const box = new THREE.Mesh(geometry, material);
+
+				const radian = i / 10 * Math.PI * 2;
+				box.position.set(
+					200 * Math.cos(radian),
+					30,
+					200 * Math.sin(radian)
+					);
+
+					group.add(box);
+
+			}
             
-            // マテリアルにテクスチャーを設定
-            const material = new THREE.MeshNormalMaterial();
-            // const material = new THREE.MeshBasicMaterial({ color: '#124dae' });  //素材を変えることができる
-            const box = new THREE.Mesh(geometry, material);
-            position.set(-1, -1, -1)
             
             scene.add(box);
             animate();
