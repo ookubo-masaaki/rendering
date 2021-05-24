@@ -9,11 +9,6 @@
 
 </head>
 <body>
-	<style>
-		div{
-			background-color: #ffffff;
-		}
-	</style>
  <script>
   var init = function() {
 
@@ -70,6 +65,12 @@ scene.add( sphere2 );
 	    
       box.rotation.x += 0.01;
       box.rotation.y += 0.01;
+	    
+      if(box.rotation > 0){
+	      box.rotation.z += 0.001;
+      }else if(box.rotation < 5){
+	      box.rotation.z -= 0.001;
+      }
 	    
   
       renderer.render(scene, camera);
