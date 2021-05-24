@@ -21,12 +21,12 @@
             camera.position.set(0, 0, +1000);
             // 箱を作成
             const geometry = new THREE.BoxGeometry(200, 200, 200);
-            geometry.position.set(2,0,0);
             
             // マテリアルにテクスチャーを設定
             const material = new THREE.MeshNormalMaterial();
             // const material = new THREE.MeshBasicMaterial({ color: '#124dae' });  //素材を変えることができる
             const box = new THREE.Mesh(geometry, material);
+            box.position.x = 5;
             
             scene.add(box);
             animate();
