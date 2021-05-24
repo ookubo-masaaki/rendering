@@ -1,109 +1,134 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 	<head>
-		<title>three.js webgl - animation - groups</title>
+		<title>three.js webgl - simple text from json</title>
 		<meta charset="utf-8">
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/99/three.min.js"></script>
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="main.css">
+		<style>
+			body {
+				background-color: #f0f0f0;
+				color: #444;
+			}
+			a {
+				color: #08f;
+			}
+		</style>
 	</head>
 	<body>
-
 		<div id="info">
-			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - animation - groups
+			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - simple text from json fonts
 		</div>
 
 		<script type="module">
 
-			// import * as THREE from '../build/three.module.js';
+			import * as THREE from '../build/three.module.js';
 
-			// import Stats from './jsm/libs/stats.module.js';
+			import { OrbitControls } from './jsm/controls/OrbitControls.js';
 
-			let stats, clock;
-			let scene, camera, renderer, mixer;
+			let camera, scene, renderer;
 
 			init();
 			animate();
 
-			function init() {
+			function init( ) {
+
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
+				camera.position.set( 0, - 400, 600 );
 
 				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0xf0f0f0 );
 
-				//
+				const loader = new THREE.FontLoader();
+				loader.load( 'fonts/helvetiker_regular.typeface.json', function ( font ) {
 
-				camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 1000 );
-				camera.position.set( 50, 50, 100 );
-				camera.lookAt( scene.position );
+					const color = 0x006699;
 
-				// all objects of this animation group share a common animation state
+					const matDark = new THREE.LineBasicMaterial( {
+						color: color,
+						side: THREE.DoubleSide
+					} );
 
-				const animationGroup = new THREE.AnimationObjectGroup();
+					const matLite = new THREE.MeshBasicMaterial( {
+						color: color,
+						transparent: true,
+						opacity: 0.4,
+						side: THREE.DoubleSide
+					} );
 
-				//
+					const message = "   Three.js\nSimple text.";
 
-				const geometry = new THREE.BoxGeometry( 5, 5, 5 );
-				const material = new THREE.MeshBasicMaterial( { transparent: true } );
+					const shapes = font.generateShapes( message, 100 );
 
-				//
+					const geometry = new THREE.ShapeGeometry( shapes );
 
-				for ( let i = 0; i < 5; i ++ ) {
+					geometry.computeBoundingBox();
 
-					for ( let j = 0; j < 5; j ++ ) {
+					const xMid = - 0.5 * ( geometry.boundingBox.max.x - geometry.boundingBox.min.x );
 
-						const mesh = new THREE.Mesh( geometry, material );
+					geometry.translate( xMid, 0, 0 );
 
-						mesh.position.x = 32 - ( 16 * i );
-						mesh.position.y = 0;
-						mesh.position.z = 32 - ( 16 * j );
+					// make shape ( N.B. edge view not visible )
 
-						scene.add( mesh );
-						animationGroup.add( mesh );
+					const text = new THREE.Mesh( geometry, matLite );
+					text.position.z = - 150;
+					scene.add( text );
+
+					// make line shape ( N.B. edge view remains visible )
+
+					const holeShapes = [];
+
+					for ( let i = 0; i < shapes.length; i ++ ) {
+
+						const shape = shapes[ i ];
+
+						if ( shape.holes && shape.holes.length > 0 ) {
+
+							for ( let j = 0; j < shape.holes.length; j ++ ) {
+
+								const hole = shape.holes[ j ];
+								holeShapes.push( hole );
+
+							}
+
+						}
 
 					}
 
-				}
+					shapes.push.apply( shapes, holeShapes );
 
-				// create some keyframe tracks
+					const lineText = new THREE.Object3D();
 
-				const xAxis = new THREE.Vector3( 1, 0, 0 );
-				const qInitial = new THREE.Quaternion().setFromAxisAngle( xAxis, 0 );
-				const qFinal = new THREE.Quaternion().setFromAxisAngle( xAxis, Math.PI );
-				const quaternionKF = new THREE.QuaternionKeyframeTrack( '.quaternion', [ 0, 1, 2 ], [ qInitial.x, qInitial.y, qInitial.z, qInitial.w, qFinal.x, qFinal.y, qFinal.z, qFinal.w, qInitial.x, qInitial.y, qInitial.z, qInitial.w ] );
+					for ( let i = 0; i < shapes.length; i ++ ) {
 
-				const colorKF = new THREE.ColorKeyframeTrack( '.material.color', [ 0, 1, 2 ], [ 1, 0, 0, 0, 1, 0, 0, 0, 1 ], THREE.InterpolateDiscrete );
-				const opacityKF = new THREE.NumberKeyframeTrack( '.material.opacity', [ 0, 1, 2 ], [ 1, 0, 1 ] );
+						const shape = shapes[ i ];
 
-				// create clip
+						const points = shape.getPoints();
+						const geometry = new THREE.BufferGeometry().setFromPoints( points );
 
-				const clip = new THREE.AnimationClip( 'default', 3, [ quaternionKF, colorKF, opacityKF ] );
+						geometry.translate( xMid, 0, 0 );
 
-				// apply the animation group to the mixer as the root object
+						const lineMesh = new THREE.Line( geometry, matDark );
+						lineText.add( lineMesh );
 
-				mixer = new THREE.AnimationMixer( animationGroup );
+					}
 
-				const clipAction = mixer.clipAction( clip );
-				clipAction.play();
+					scene.add( lineText );
 
-				//
+				} ); //end load function
 
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				document.body.appendChild( renderer.domElement );
 
-				//
-
-				stats = new Stats();
-				document.body.appendChild( stats.dom );
-
-				//
-
-				clock = new THREE.Clock();
-
-				//
+				const controls = new OrbitControls( camera, renderer.domElement );
+				controls.target.set( 0, 0, 0 );
+				controls.update();
 
 				window.addEventListener( 'resize', onWindowResize );
 
-			}
+			} // end init
 
 			function onWindowResize() {
 
@@ -124,17 +149,7 @@
 
 			function render() {
 
-				const delta = clock.getDelta();
-
-				if ( mixer ) {
-
-					mixer.update( delta );
-
-				}
-
 				renderer.render( scene, camera );
-
-				stats.update();
 
 			}
 
