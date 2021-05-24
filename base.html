@@ -1,69 +1,147 @@
 <!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8"/>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r127/three.min.js"></script>
-  <script>
-    // ページの読み込みを待つ
-    window.addEventListener('load', init);
+<html lang="en">
+	<head>
+		<title>three.js webgl - morph targets - horse</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="main.css">
+		<style>
+			body {
+				background-color: #f0f0f0;
+				color: #444;
+			}
+			a {
+				color: #08f;
+			}
+		</style>
+	</head>
+	<body>
 
-    function init() {
+		<div id="info">
+			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - morph targets - horse<br/>
+			model by <a href="https://mirada.com/" target="_blank" rel="noopener">mirada</a> from <a href="http://www.ro.me" target="_blank" rel="noopener">rome</a>
+		</div>
 
-      // サイズを指定
-      const width = 800;
-      const height = 600;
+		<script type="module">
 
-      // レンダラーを作成
-      const renderer = new THREE.WebGLRenderer({
-        canvas: document.querySelector('#myCanvas')
-      });
-      renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setSize(width, height);
+			import * as THREE from '../build/three.module.js';
 
-      // シーンを作成
-      const scene = new THREE.Scene();
-      const group = new THREE.Group();
-      
-      scene.add(group);
+			import Stats from './jsm/libs/stats.module.js';
 
-      // カメラを作成
-      const camera = new THREE.PerspectiveCamera(45, width / height);
-      camera.position.set(0, 0, +1000);
+			import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
 
-      // 箱を作成
-      for(let i = 0; i < 5; i++){
-        const geometry = new THREE.BoxGeometry(100, 100, 100);
-        const material = new THREE.MeshNormalMaterial();
-        const box = new THREE.Mesh(geometry, material);
-        
-        const radian = i /5 * Math.PI * 2;
-        box.position.set(
-          200 * Math.cos(radian),
-          30,
-          200 * Math.sin(radian)
-      );
-          
-          group.add(box);
-      }
+			let container, stats;
+			let camera, scene, renderer;
+			let mesh, mixer;
 
-       tick();
+			const radius = 600;
+			let theta = 0;
+			let prevTime = Date.now();
 
-      // 毎フレーム時に実行されるループイベントです
-      function tick() {
-        
-        group.rotation.y += 0.01;
-        
-        box.rotation.x += 0.01;
-        box.rotation.y += 0.01;
-        renderer.render(scene, camera); // レンダリング
+			init();
+			animate();
 
-        requestAnimationFrame(tick);
-      }
-     
-    }
-  </script>
-</head>
-<body>
-  <canvas id="myCanvas"></canvas>
-</body>
+			function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				//
+
+				camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 10000 );
+				camera.position.y = 300;
+
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0xf0f0f0 );
+
+				//
+
+				const light1 = new THREE.DirectionalLight( 0xefefff, 1.5 );
+				light1.position.set( 1, 1, 1 ).normalize();
+				scene.add( light1 );
+
+				const light2 = new THREE.DirectionalLight( 0xffefef, 1.5 );
+				light2.position.set( - 1, - 1, - 1 ).normalize();
+				scene.add( light2 );
+
+				const loader = new GLTFLoader();
+				loader.load( "models/gltf/Horse.glb", function ( gltf ) {
+
+					mesh = gltf.scene.children[ 0 ];
+					mesh.scale.set( 1.5, 1.5, 1.5 );
+					scene.add( mesh );
+
+					mixer = new THREE.AnimationMixer( mesh );
+
+					mixer.clipAction( gltf.animations[ 0 ] ).setDuration( 1 ).play();
+
+				} );
+
+				//
+
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				renderer.outputEncoding = THREE.sRGBEncoding;
+
+				container.appendChild( renderer.domElement );
+
+				//
+
+				stats = new Stats();
+				container.appendChild( stats.dom );
+
+				//
+
+				window.addEventListener( 'resize', onWindowResize );
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			//
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				render();
+				stats.update();
+
+			}
+
+			function render() {
+
+				theta += 0.1;
+
+				camera.position.x = radius * Math.sin( THREE.MathUtils.degToRad( theta ) );
+				camera.position.z = radius * Math.cos( THREE.MathUtils.degToRad( theta ) );
+
+				camera.lookAt( 0, 150, 0 );
+
+				if ( mixer ) {
+
+					const time = Date.now();
+
+					mixer.update( ( time - prevTime ) * 0.001 );
+
+					prevTime = time;
+
+				}
+
+				renderer.render( scene, camera );
+
+			}
+
+		</script>
+
+	</body>
 </html>
